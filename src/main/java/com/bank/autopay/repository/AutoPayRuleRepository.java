@@ -9,6 +9,10 @@ import java.util.List;
 @Repository
 public interface AutoPayRuleRepository extends JpaRepository<AutopayRuleEntity, Long> {
 
+    /**
+     * Поиск активных правил
+     * @return
+     */
     List<AutopayRuleEntity> findByEnabledTrue();
 
 }

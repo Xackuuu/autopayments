@@ -1,9 +1,7 @@
 package com.bank.autopay.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -11,8 +9,6 @@ import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "autopay_rule")
-@AllArgsConstructor
-@NoArgsConstructor
 @Getter @Setter
 public class AutopayRuleEntity {
 
@@ -52,4 +48,15 @@ public class AutopayRuleEntity {
      */
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
+
+    public AutopayRuleEntity(Long userId, Long recipientId, BigDecimal amount, String cronExpression, boolean enabled) {
+        this.userId = userId;
+        this.recipientId = recipientId;
+        this.amount = amount;
+        this.cronExpression = cronExpression;
+        this.enabled = enabled;
+    }
+
+    public AutopayRuleEntity() {}
+
 }
