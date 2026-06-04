@@ -16,7 +16,11 @@ public class AutoPayScheduler {
     @Scheduled(cron = "0/30 * * * * ?")
     private void execute() {
         autoPayService.getActiveRules().stream()
-                .map(rule -> String.format("Scheduled check: rule id=%s, user=%s, amount=%s", rule.getId(), rule.getUserId(), rule.getAmount()))
+                .map(
+                        rule ->
+                                String.format("Scheduled check: rule id=%s, user=%s, amount=%s",
+                                        rule.getId(), rule.getUserId(), rule.getAmount())
+                )
                 .forEach(log::info);
     }
 }

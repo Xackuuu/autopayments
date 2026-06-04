@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 2
+      author: xackuuu
+      comment: "Вставка тестовых правил автоплатежей"
+      changes:
+        - insert:
+            tableName: autopay_rule
+            columns:
+              - column: { name: user_id, valueNumeric: 1 }
+              - column: { name: recipient_id, valueNumeric: 2 }
+              - column: { name: amount, valueNumeric: "100.00" }
+              - column: { name: cron_expression, value: "0 0 9 * * *" }
+              - column: { name: enabled, valueBoolean: true }
+        - insert:
+            tableName: autopay_rule
+            columns:
+              - column: { name: user_id, valueNumeric: 2 }
+              - column: { name: recipient_id, valueNumeric: 3 }
+              - column: { name: amount, valueNumeric: "100.00" }
+              - column: { name: cron_expression, value: "0 0 9 * * *" }
+              - column: { name: enabled, valueBoolean: false }
+        - insert:
+            tableName: autopay_rule
+            columns:
+              - column: { name: user_id, valueNumeric: 3 }
+              - column: { name: recipient_id, valueNumeric: 4 }
+              - column: { name: amount, valueNumeric: "100.00" }
+              - column: { name: cron_expression, value: "0 0 9 * * *" }
+              - column: { name: enabled, valueBoolean: true }
+        - insert:
+            tableName: autopay_rule
+            columns:
+              - column: { name: user_id, valueNumeric: 4 }
+              - column: { name: recipient_id, valueNumeric: 1 }
+              - column: { name: amount, valueNumeric: "100.00" }
+              - column: { name: cron_expression, value: "0 0 9 * * *" }
+              - column: { name: enabled, valueBoolean: false }
