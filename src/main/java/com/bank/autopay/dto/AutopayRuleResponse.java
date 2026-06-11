@@ -20,4 +20,17 @@ public class AutopayRuleResponse {
     private String cronExpression;
     private LocalDateTime lastExecutedAt;
     private boolean enabled;
+
+    @Override
+    public String toString() {
+        return "{" +
+                "id=" + id +
+                ", userId=" + userId +
+                ", recipientId=" + recipientId +
+                ", amount=" + amount +
+                ", cronExpression='" + cronExpression + '\'' +
+                ", lastExecutedAt=" + lastExecutedAt +
+                ", enabled=" + enabled +
+                '}';
+    }
 }

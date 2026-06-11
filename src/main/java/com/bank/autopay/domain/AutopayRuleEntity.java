@@ -49,6 +49,9 @@ public class AutopayRuleEntity {
     @Column(name = "enabled", nullable = false)
     private boolean enabled;
 
+    @Version
+    private Long version;
+
     public AutopayRuleEntity(Long userId, Long recipientId, BigDecimal amount, String cronExpression, boolean enabled) {
         this.userId = userId;
         this.recipientId = recipientId;

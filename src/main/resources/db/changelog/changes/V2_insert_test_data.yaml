@@ -9,30 +9,34 @@ databaseChangeLog:
             columns:
               - column: { name: user_id, valueNumeric: 1 }
               - column: { name: recipient_id, valueNumeric: 2 }
-              - column: { name: amount, valueNumeric: "100.00" }
-              - column: { name: cron_expression, value: "0 0 9 * * *" }
+              - column: { name: amount, valueNumeric: 100.00 }
+              - column: { name: cron_expression, value: "0/10 * * * * ?" }
               - column: { name: enabled, valueBoolean: true }
+              - column: { name: version, valueNumeric: 0 }
         - insert:
             tableName: autopay_rule
             columns:
               - column: { name: user_id, valueNumeric: 2 }
               - column: { name: recipient_id, valueNumeric: 3 }
-              - column: { name: amount, valueNumeric: "100.00" }
+              - column: { name: amount, valueNumeric: 200.00 }
               - column: { name: cron_expression, value: "0 0 9 * * *" }
               - column: { name: enabled, valueBoolean: false }
+              - column: { name: version, valueNumeric: 0 }
         - insert:
             tableName: autopay_rule
             columns:
               - column: { name: user_id, valueNumeric: 3 }
               - column: { name: recipient_id, valueNumeric: 4 }
-              - column: { name: amount, valueNumeric: "100.00" }
-              - column: { name: cron_expression, value: "0 0 9 * * *" }
+              - column: { name: amount, valueNumeric: 300.00 }
+              - column: { name: cron_expression, value: "0/15 * * * * ?" }
               - column: { name: enabled, valueBoolean: true }
+              - column: { name: version, valueNumeric: 0 }
         - insert:
             tableName: autopay_rule
             columns:
               - column: { name: user_id, valueNumeric: 4 }
               - column: { name: recipient_id, valueNumeric: 1 }
-              - column: { name: amount, valueNumeric: "100.00" }
+              - column: { name: amount, valueNumeric: 400.00 }
               - column: { name: cron_expression, value: "0 0 9 * * *" }
               - column: { name: enabled, valueBoolean: false }
+              - column: { name: version, valueNumeric: 0 }

@@ -5,7 +5,7 @@ databaseChangeLog:
       changes:
         - createTable:
             tableName: autopay_rule
-            schemaName: public
+            schemaName: autopayment
             columns:
               - column:
                   name: id
@@ -43,6 +43,11 @@ databaseChangeLog:
                   defaultValueBoolean: true
                   constraints:
                     nullable: false
+              - column:
+                  name: version
+                  type: BIGINT
+                  constraints:
+                    nullable: true
         - createIndex:
             indexName: idx_autopay_rule_user_id
             tableName: autopay_rule
