@@ -4,6 +4,7 @@ import com.bank.autopay.domain.AutopayRuleEntity;
 import com.bank.autopay.dto.AutopayRuleRequest;
 import com.bank.autopay.dto.AutopayRuleResponse;
 import com.bank.autopay.dto.mapper.AutopayRuleMapper;
+import com.bank.autopay.exception.RuleAlreadyDeletedException;
 import com.bank.autopay.exception.RuleNotFoundException;
 import com.bank.autopay.repository.AutoPayRuleRepository;
 import lombok.RequiredArgsConstructor;
@@ -60,9 +61,13 @@ public class AutoPayServiceImpl implements AutoPayService {
     @Override
     @Transactional
     public void deleteRuleById(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuleNotFoundException(id);
+        AutopayRuleEntity entity = repository.findById(id)
+                .orElseThrow(() -> new RuleNotFoundException(id));
+
+        if (entity.getDeletedAt() != null) {
+            throw  new RuleAlreadyDeletedException(id);
         }
-        repository.deleteById(id);
+
+        repository.softDeleteById(id);
     }
 }

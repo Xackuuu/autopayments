@@ -28,7 +28,7 @@ public class AutopayRuleRequest {
     @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0")
     private BigDecimal amount;
 
-    @Pattern(regexp = "^([0-9*\\-/]+,?\\s?)+$", message = "Некорректный cron expression")
+    @Pattern(regexp = "^(\\*|([0-9]|[1-5][0-9]))\\s+\\*\\s+\\*\\s+\\*\\s+\\*\\s+\\?$", message = "Некорректный cron expression")
     private String cronExpression;
     /**
      * Активно ли правило

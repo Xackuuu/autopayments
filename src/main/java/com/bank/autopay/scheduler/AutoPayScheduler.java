@@ -45,7 +45,7 @@ public class AutoPayScheduler {
             if (result) {
                 rule.setLastExecutedAt(LocalDateTime.now());
                 repository.save(rule);
-                log.info("Payment executed: ruleId={}, userId={}, amount={}", rule.getId(), rule.getUserId(), rule.getAmount());
+                log.info("Payment executed: ruleId={}, userId={}, amount={}, balance={}", rule.getId(), rule.getUserId(), rule.getAmount(), paymentService.getBalances().get(rule.getUserId()));
             } else {
                 log.error("Insufficient funds: userId={}, balance={}, required={}", rule.getUserId(), paymentService.getBalances().get(rule.getUserId()), rule.getAmount());
             }

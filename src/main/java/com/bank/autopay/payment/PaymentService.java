@@ -16,21 +16,15 @@ public class PaymentService {
 
     private final Map<Long, BigDecimal> balances = new ConcurrentHashMap<>();
 
-    {
-        balances.put(1L, new BigDecimal("1000.00"));
-        balances.put(2L, new BigDecimal("500.00"));
-        balances.put(3L, new BigDecimal("1000.00"));
-        balances.put(4L, new BigDecimal("500.00"));
-    }
-
     public boolean withdraw(Long userId, Long recipientId, BigDecimal amount) {
+        balances.putIfAbsent(userId, new BigDecimal("10000.00"));
+        balances.putIfAbsent(recipientId, new BigDecimal("10000.00"));
         BigDecimal userBalance = balances.get(userId);
 
         if (userBalance == null || userBalance.compareTo(amount) < 0) {
             return false;
         }
 
-        balances.put(recipientId, BigDecimal.ZERO);
         balances.put(userId, userBalance.subtract(amount));
         balances.put(recipientId, balances.get(recipientId).add(amount));
         return true;

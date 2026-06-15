@@ -1,0 +1,58 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-audit-columns-to-autopay-rule
+      author: xackuuu
+      labels: schema-update
+      comment: "Добавление аудит-колонок created_at, updated_at, deleted_at в таблицу autopay_rule"
+      changes:
+        # Добавляем колонку created_at
+        - addColumn:
+            tableName: autopay_rule
+            schemaName: autopayment
+            columns:
+              - column:
+                  name: created_at
+                  type: TIMESTAMP
+                  remarks: "Дата и время создания записи"
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+
+        # Добавляем колонку updated_at
+        - addColumn:
+            tableName: autopay_rule
+            schemaName: autopayment
+            columns:
+              - column:
+                  name: updated_at
+                  type: TIMESTAMP
+                  remarks: "Дата и время последнего обновления записи"
+                  constraints:
+                    nullable: false
+                  defaultValueComputed: "CURRENT_TIMESTAMP"
+
+        # Добавляем колонку deleted_at
+        - addColumn:
+            tableName: autopay_rule
+            schemaName: autopayment
+            columns:
+              - column:
+                  name: deleted_at
+                  type: TIMESTAMP
+                  remarks: "Дата и время мягкого удаления записи"
+                  constraints:
+                    nullable: true
+
+  - changeSet:
+      id: set-created-at-for-existing-rows
+      author: xackuuu
+      labels: data-migration
+      comment: "Установка created_at для существующих записей"
+      changes:
+        - sql:
+            comment: "Обновляем существующие записи: устанавливаем created_at = NOW()"
+            sql: |
+              UPDATE autopay_rule 
+              SET created_at = NOW(), 
+                  updated_at = NOW() 
+              WHERE created_at IS NULL;

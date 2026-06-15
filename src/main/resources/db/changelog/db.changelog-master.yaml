@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/V1_create_autopay_rule_table.yaml
   - include:
       file: db/changelog/changes/V2_insert_test_data.yaml
+  - include:
+      file: db/changelog/changes/V3_add_audit_columns.yaml

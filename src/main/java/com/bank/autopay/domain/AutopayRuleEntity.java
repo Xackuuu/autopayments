@@ -51,6 +51,24 @@ public class AutopayRuleEntity {
 
     @Version
     private Long version;
+    /**
+     * Дата создания правила
+     */
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    /**
+     * Дата обновления правила
+     */
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
+    /**
+     * Для soft delete (мягкое удаление)
+     */
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
 
     public AutopayRuleEntity(Long userId, Long recipientId, BigDecimal amount, String cronExpression, boolean enabled) {
         this.userId = userId;
@@ -61,5 +79,16 @@ public class AutopayRuleEntity {
     }
 
     public AutopayRuleEntity() {}
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
 
 }
