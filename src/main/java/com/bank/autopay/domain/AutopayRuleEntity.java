@@ -91,4 +91,20 @@ public class AutopayRuleEntity {
         updatedAt = LocalDateTime.now();
     }
 
+    @Override
+    public String toString() {
+        return "AutopayRuleEntity{" +
+                "id=" + id +
+                ", userId=" + userId +
+                ", recipientId=" + recipientId +
+                ", amount=" + amount +
+                ", cronExpression='" + cronExpression + '\'' +
+                ", lastExecutedAt=" + lastExecutedAt +
+                ", enabled=" + enabled +
+                ", version=" + version +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", deletedAt=" + deletedAt +
+                '}';
+    }
 }

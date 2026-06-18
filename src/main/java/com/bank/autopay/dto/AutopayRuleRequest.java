@@ -4,11 +4,13 @@ import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
 
 @Setter @Getter
+@NoArgsConstructor
 public class AutopayRuleRequest {
 
     /**
