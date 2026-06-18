@@ -32,9 +32,9 @@ public class AutopayRuleRepositoryTest {
 
         AutopayRuleEntity saved = repository.save(entity);
 
-        log.info("\n✅ Сущность сохранена с ID: {}", saved.getId());
-        log.info("\n✅ CreatedAt: {}", saved.getCreatedAt());
-        log.info("\n✅ DeletedAt: {}", saved.getDeletedAt());
+        log.info("\n✅✅✅ Сущность сохранена с ID: {}✅✅✅", saved.getId());
+        log.info("\n✅✅✅ CreatedAt: {}✅✅✅", saved.getCreatedAt());
+        log.info("\n✅✅✅ DeletedAt: {}✅✅✅", saved.getDeletedAt());
 
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getCreatedAt()).isNotNull();
@@ -43,9 +43,9 @@ public class AutopayRuleRepositoryTest {
         Optional<AutopayRuleEntity> found = repository.findById(saved.getId());
 
         if (found.isPresent()) {
-            log.info("\n✅ Сущность создана и найдена");
+            log.info("\n✅✅✅ Сущность создана и найдена✅✅✅");
         } else {
-            log.error("\n❌ Сущность не создана и не найдена");
+            log.error("\n❌❌❌ Сущность не создана и не найдена❌❌❌");
         }
 
         assertThat(found).isPresent();
@@ -57,15 +57,15 @@ public class AutopayRuleRepositoryTest {
     void softDeleteShouldSetDeletedAt() {
         AutopayRuleEntity rule = repository.save(createRule());
 
-        log.info("\n✅ Сущность сохранена с ID: {}", rule.getId());
-        log.info("\n✅ CreatedAt: {}", rule.getCreatedAt());
-        log.info("\n✅ DeletedAt: {}", rule.getDeletedAt());
+        log.info("\n✅✅✅ Сущность сохранена с ID: {}✅✅✅", rule.getId());
+        log.info("\n✅✅✅ CreatedAt: {}✅✅✅", rule.getCreatedAt());
+        log.info("\n✅✅✅ DeletedAt: {}✅✅✅", rule.getDeletedAt());
 
         Optional<AutopayRuleEntity> beforeDelete = repository.findById(rule.getId());
         if (beforeDelete.isPresent()) {
-            log.info("\n✅ Сущность найдена {}", beforeDelete.get());
+            log.info("\n✅✅✅ Сущность найдена {}✅✅✅", beforeDelete.get());
         } else {
-            log.error("\n❌ Сущность не найдена!!!");
+            log.error("\n❌❌❌ Сущность не найдена!!!❌❌❌");
         }
 
 
@@ -74,10 +74,10 @@ public class AutopayRuleRepositoryTest {
         Optional<AutopayRuleEntity> afterDelete = repository.findById(rule.getId());
 
         if (afterDelete.isEmpty()) {
-            log.info("\n✅ Сущность с ID: {} скрыта", rule.getId());
+            log.info("\n✅✅✅ Сущность с ID: {} скрыта✅✅✅", rule.getId());
         } else {
-            log.error("\n❌ СУЩНОСТЬ ВСЕ ЕЩЕ НАЙДЕНА!");
-            log.error("\n❌ Мягкое удаление НЕ сработало!");
+            log.error("\n❌❌❌ СУЩНОСТЬ ВСЕ ЕЩЕ НАЙДЕНА!❌❌❌");
+            log.error("\n❌❌❌ Мягкое удаление НЕ сработало!❌❌❌");
         }
 
         assertThat(afterDelete).isEmpty();
