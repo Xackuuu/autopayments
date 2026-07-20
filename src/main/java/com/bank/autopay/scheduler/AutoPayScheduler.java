@@ -6,8 +6,9 @@ import com.bank.autopay.monitoring.PaymentMetrics;
 import com.bank.autopay.payment.PaymentService;
 import com.bank.autopay.repository.AutoPayRuleRepository;
 import io.micrometer.core.instrument.Timer;
+import jakarta.annotation.PreDestroy;
 import jakarta.persistence.OptimisticLockException;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -18,18 +19,23 @@ import java.util.List;
 
 @Component
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AutoPayScheduler {
 
     private final PaymentMetrics paymentMetrics;
     private final PaymentService paymentService;
     private final AutoPayRuleRepository repository;
     private final CronChecker cronChecker;
+    private volatile boolean running = true;
 
     @Scheduled(cron = "0/10 * * * * ?")
     protected void execute() {
-        List<AutopayRuleEntity> activeRules = repository.findByEnabledTrue();
+        if (!running) {
+            log.info("Scheduler is stopping, skipping execution");
+            return;
+        }
 
+        List<AutopayRuleEntity> activeRules = repository.findByEnabledTrue();
         activeRules.forEach(
                 entity ->
                 {
@@ -38,6 +44,14 @@ public class AutoPayScheduler {
                     }
                 }
         );
+    }
+
+    @PreDestroy
+    public void shutdown() {
+        log.info("🛑 Shutting down AutoPayScheduler...");
+        running = false;
+        // Ждём завершения текущих операций (уже делает spring.lifecycle.timeout)
+        log.info("✅ AutoPayScheduler shutdown complete");
     }
 
     @Transactional

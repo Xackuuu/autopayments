@@ -18,7 +18,7 @@ public class SchedulerConfig {
 
         scheduler.setPoolSize(5);
         scheduler.setThreadNamePrefix("autoPayment-scheduler");
-        scheduler.setAwaitTerminationMillis(30);
+        scheduler.setAwaitTerminationSeconds(30);
         scheduler.setWaitForTasksToCompleteOnShutdown(true);
         scheduler.initialize();
         return scheduler;
