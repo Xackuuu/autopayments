@@ -2,8 +2,10 @@ package com.bank.autopay.scheduler;
 
 import com.bank.autopay.cron.CronChecker;
 import com.bank.autopay.domain.AutopayRuleEntity;
+import com.bank.autopay.monitoring.PaymentMetrics;
 import com.bank.autopay.payment.PaymentService;
 import com.bank.autopay.repository.AutoPayRuleRepository;
+import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.OptimisticLockException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +21,7 @@ import java.util.List;
 @AllArgsConstructor
 public class AutoPayScheduler {
 
+    private final PaymentMetrics paymentMetrics;
     private final PaymentService paymentService;
     private final AutoPayRuleRepository repository;
     private final CronChecker cronChecker;
@@ -39,21 +42,23 @@ public class AutoPayScheduler {
 
     @Transactional
     private void executePayment(AutopayRuleEntity rule) {
-
+        Timer.Sample timer = paymentMetrics.startPaymentTimer();
         try {
             boolean result = paymentService.withdraw(rule.getUserId(), rule.getRecipientId(), rule.getAmount());
             if (result) {
                 rule.setLastExecutedAt(LocalDateTime.now());
                 repository.save(rule);
+                paymentMetrics.recordSuccessfulPayment();
                 log.info("Payment executed: ruleId={}, userId={}, amount={}, balance={}", rule.getId(), rule.getUserId(), rule.getAmount(), paymentService.getBalances().get(rule.getUserId()));
             } else {
+                paymentMetrics.recordFailedPayment();
                 log.error("Insufficient funds: userId={}, balance={}, required={}", rule.getUserId(), paymentService.getBalances().get(rule.getUserId()), rule.getAmount());
             }
         } catch (OptimisticLockException e) {
+            paymentMetrics.recordFailedPayment();
             log.warn("Rule {} was updated concurrently, skipping this cycle", rule.getId());
+        } finally {
+            paymentMetrics.stopPaymentTimer(timer);
         }
-
-
-
     }
 }
