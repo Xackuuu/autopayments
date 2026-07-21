@@ -5,11 +5,14 @@ import com.bank.autopay.domain.AutopayRuleEntity;
 import com.bank.autopay.monitoring.PaymentMetrics;
 import com.bank.autopay.payment.PaymentService;
 import com.bank.autopay.repository.AutoPayRuleRepository;
+import com.bank.autopay.event.PaymentFailedEvent;
+import com.bank.autopay.event.PaymentSuccessEvent;
 import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PreDestroy;
 import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +29,7 @@ public class AutoPayScheduler {
     private final PaymentService paymentService;
     private final AutoPayRuleRepository repository;
     private final CronChecker cronChecker;
+    private final ApplicationEventPublisher applicationEventPublisher;
     private volatile boolean running = true;
 
     @Scheduled(cron = "0/10 * * * * ?")
@@ -63,13 +67,38 @@ public class AutoPayScheduler {
                 rule.setLastExecutedAt(LocalDateTime.now());
                 repository.save(rule);
                 paymentMetrics.recordSuccessfulPayment();
+                applicationEventPublisher.publishEvent(
+                        new PaymentSuccessEvent(
+                                rule.getId(),
+                                rule.getUserId(),
+                                rule.getAmount()
+                        ));
+
                 log.info("Payment executed: ruleId={}, userId={}, amount={}, balance={}", rule.getId(), rule.getUserId(), rule.getAmount(), paymentService.getBalances().get(rule.getUserId()));
             } else {
                 paymentMetrics.recordFailedPayment();
+
+                applicationEventPublisher.publishEvent(
+                        new PaymentFailedEvent(
+                            rule.getId(),
+                            rule.getUserId(),
+                            rule.getAmount(),
+                            "Insufficient funds"
+                        )
+                );
+
                 log.error("Insufficient funds: userId={}, balance={}, required={}", rule.getUserId(), paymentService.getBalances().get(rule.getUserId()), rule.getAmount());
             }
         } catch (OptimisticLockException e) {
             paymentMetrics.recordFailedPayment();
+
+            applicationEventPublisher.publishEvent(new PaymentFailedEvent(
+                    rule.getId(),
+                    rule.getUserId(),
+                    rule.getAmount(),
+                    "Optimistic lock exception: " + e.getMessage()
+            ));
+
             log.warn("Rule {} was updated concurrently, skipping this cycle", rule.getId());
         } finally {
             paymentMetrics.stopPaymentTimer(timer);
