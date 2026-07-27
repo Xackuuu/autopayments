@@ -1,6 +1,6 @@
 package com.bank.autopay.controller;
 
-import com.bank.autopay.scheduler.AutoPayScheduler;
+import com.bank.autopay.scheduler.AutopayJob;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AdminController {
 
-    private final AutoPayScheduler scheduler;
+    private final AutopayJob scheduler;
 
     @PostMapping("/stop")
     public ResponseEntity<String> stopScheduler() {

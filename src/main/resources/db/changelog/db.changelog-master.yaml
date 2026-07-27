@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changes/V2_insert_test_data.yaml
   - include:
       file: db/changelog/changes/V3_add_audit_columns.yaml
+  - include:
+      file: db/changelog/changes/V4_create_quartz_tables.sql

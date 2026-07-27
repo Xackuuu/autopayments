@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "autopay_rule")
+@Table(name = "autopay_rule", schema = "autopayment")
 @Getter @Setter
 public class AutopayRuleEntity {
 

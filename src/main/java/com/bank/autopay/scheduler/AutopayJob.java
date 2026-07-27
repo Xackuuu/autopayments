@@ -2,18 +2,20 @@ package com.bank.autopay.scheduler;
 
 import com.bank.autopay.cron.CronChecker;
 import com.bank.autopay.domain.AutopayRuleEntity;
+import com.bank.autopay.event.PaymentFailedEvent;
+import com.bank.autopay.event.PaymentSuccessEvent;
 import com.bank.autopay.monitoring.PaymentMetrics;
 import com.bank.autopay.payment.PaymentService;
 import com.bank.autopay.repository.AutoPayRuleRepository;
-import com.bank.autopay.event.PaymentFailedEvent;
-import com.bank.autopay.event.PaymentSuccessEvent;
 import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PreDestroy;
 import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.quartz.Job;
+import org.quartz.JobExecutionContext;
+import org.quartz.JobExecutionException;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,19 +23,20 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
-@Slf4j
 @RequiredArgsConstructor
-public class AutoPayScheduler {
+@Slf4j
+public class AutopayJob implements Job {
 
+
+    private final AutoPayRuleRepository repository;
     private final PaymentMetrics paymentMetrics;
     private final PaymentService paymentService;
-    private final AutoPayRuleRepository repository;
     private final CronChecker cronChecker;
     private final ApplicationEventPublisher applicationEventPublisher;
     private volatile boolean running = true;
 
-    @Scheduled(cron = "0/10 * * * * ?")
-    protected void execute() {
+    @Override
+    public void execute(JobExecutionContext context) throws JobExecutionException {
         if (!running) {
             log.info("Scheduler is stopping, skipping execution");
             return;
@@ -80,10 +83,10 @@ public class AutoPayScheduler {
 
                 applicationEventPublisher.publishEvent(
                         new PaymentFailedEvent(
-                            rule.getId(),
-                            rule.getUserId(),
-                            rule.getAmount(),
-                            "Insufficient funds"
+                                rule.getId(),
+                                rule.getUserId(),
+                                rule.getAmount(),
+                                "Insufficient funds"
                         )
                 );
 
