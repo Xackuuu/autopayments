@@ -9,3 +9,5 @@ databaseChangeLog:
       file: db/changelog/changes/V4_create_quartz_tables.sql
   - include:
       file: db/changelog/changes/V5_create_payment_executions.sql
+  - include:
+      file: db/changelog/changes/V6_add_indexes.sql
