@@ -7,18 +7,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
 @Slf4j
 @SpringBootTest
-@ActiveProfiles("test")
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class AutopayRuleRepositoryTest {
 
@@ -26,70 +23,72 @@ public class AutopayRuleRepositoryTest {
     private AutoPayRuleRepository repository;
 
     @Test
-    @Transactional
     void shouldSaveAndFindRule() {
-        AutopayRuleEntity entity = createRule();
+        // given
+        AutopayRuleEntity rule = new AutopayRuleEntity();
+        rule.setUserId(1L);
+        rule.setRecipientId(2L);
+        rule.setAmount(new BigDecimal("100.00"));
+        rule.setCronExpression("0 0 12 * * ?");
+        rule.setEnabled(true);
 
-        AutopayRuleEntity saved = repository.save(entity);
+        // when
+        AutopayRuleEntity saved = repository.save(rule);
 
-        log.info("\n✅✅✅ Сущность сохранена с ID: {}✅✅✅", saved.getId());
-        log.info("\n✅✅✅ CreatedAt: {}✅✅✅", saved.getCreatedAt());
-        log.info("\n✅✅✅ DeletedAt: {}✅✅✅", saved.getDeletedAt());
-
+        // then
         assertThat(saved.getId()).isNotNull();
         assertThat(saved.getCreatedAt()).isNotNull();
+        assertThat(saved.getVersion()).isEqualTo(0L);
 
-
+        // when
         Optional<AutopayRuleEntity> found = repository.findById(saved.getId());
 
-        if (found.isPresent()) {
-            log.info("\n✅✅✅ Сущность создана и найдена✅✅✅");
-        } else {
-            log.error("\n❌❌❌ Сущность не создана и не найдена❌❌❌");
-        }
-
+        // then
         assertThat(found).isPresent();
-        assertThat(found.get().getUserId()).isEqualTo(5L);
+        assertThat(found.get().getUserId()).isEqualTo(1L);
+        assertThat(found.get().getAmount()).isEqualByComparingTo("100.00");
     }
 
     @Test
-    @Transactional
-    void softDeleteShouldSetDeletedAt() {
-        AutopayRuleEntity rule = repository.save(createRule());
+    void shouldFindOnlyActiveRules() {
+        // given
+        AutopayRuleEntity activeRule = createRule(true);
+        AutopayRuleEntity inactiveRule = createRule(false);
+        repository.save(activeRule);
+        repository.save(inactiveRule);
 
-        log.info("\n✅✅✅ Сущность сохранена с ID: {}✅✅✅", rule.getId());
-        log.info("\n✅✅✅ CreatedAt: {}✅✅✅", rule.getCreatedAt());
-        log.info("\n✅✅✅ DeletedAt: {}✅✅✅", rule.getDeletedAt());
+        // when
+        List<AutopayRuleEntity> activeRules = repository.findByEnabledTrue();
 
-        Optional<AutopayRuleEntity> beforeDelete = repository.findById(rule.getId());
-        if (beforeDelete.isPresent()) {
-            log.info("\n✅✅✅ Сущность найдена {}✅✅✅", beforeDelete.get());
-        } else {
-            log.error("\n❌❌❌ Сущность не найдена!!!❌❌❌");
-        }
-
-
-        log.info("\n Удаление сущности с ID: {}", rule.getId());
-        repository.softDeleteById(rule.getId());
-        Optional<AutopayRuleEntity> afterDelete = repository.findById(rule.getId());
-
-        if (afterDelete.isEmpty()) {
-            log.info("\n✅✅✅ Сущность с ID: {} скрыта✅✅✅", rule.getId());
-        } else {
-            log.error("\n❌❌❌ СУЩНОСТЬ ВСЕ ЕЩЕ НАЙДЕНА!❌❌❌");
-            log.error("\n❌❌❌ Мягкое удаление НЕ сработало!❌❌❌");
-        }
-
-        assertThat(afterDelete).isEmpty();
+        // then
+        assertThat(activeRules).contains(activeRule);
+        assertThat(activeRules).doesNotContain(inactiveRule);
     }
 
-    private AutopayRuleEntity createRule() {
-        AutopayRuleEntity entity = new AutopayRuleEntity();
-        entity.setUserId(5L);
-        entity.setRecipientId(1L);
-        entity.setAmount(new BigDecimal("400.00"));
-        entity.setCronExpression("50 * * * * ?");
-        entity.setEnabled(true);
-        return entity;
+    @Test
+    void shouldSoftDeleteRule() {
+        // given
+        AutopayRuleEntity rule = repository.save(createRule(true));
+
+        // when
+        repository.softDeleteById(rule.getId());
+
+        // then
+        Optional<AutopayRuleEntity> found = repository.findById(rule.getId());
+        assertThat(found).isEmpty();
+
+        // Восстанавливаем для проверки deletedAt
+        AutopayRuleEntity deleted = repository.findByIdWithDeleted(rule.getId()).orElseThrow();
+        assertThat(deleted.getDeletedAt()).isNotNull();
+    }
+
+    private AutopayRuleEntity createRule(boolean enabled) {
+        AutopayRuleEntity rule = new AutopayRuleEntity();
+        rule.setUserId(1L);
+        rule.setRecipientId(2L);
+        rule.setAmount(new BigDecimal("100.00"));
+        rule.setCronExpression("0 0 12 * * ?");
+        rule.setEnabled(enabled);
+        return rule;
     }
 }

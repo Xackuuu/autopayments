@@ -20,6 +20,9 @@ public interface AutoPayRuleRepository extends JpaRepository<AutopayRuleEntity, 
     @Query("SELECT r FROM AutopayRuleEntity r WHERE r.deletedAt IS NULL AND r.enabled = true")
     List<AutopayRuleEntity> findByEnabledTrue();
 
+    @Query("SELECT r FROM AutopayRuleEntity r WHERE r.deletedAt IS NULL AND r.id = :id")
+    Optional<AutopayRuleEntity> findByIdWithDeleted(@Param("id") Long id);
+
     @Query("SELECT r FROM AutopayRuleEntity r WHERE r.deletedAt IS NULL")
     List<AutopayRuleEntity> findAll();
 
