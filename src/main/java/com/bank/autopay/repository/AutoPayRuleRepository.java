@@ -20,9 +20,6 @@ public interface AutoPayRuleRepository extends JpaRepository<AutopayRuleEntity, 
     @Query("SELECT r FROM AutopayRuleEntity r WHERE r.deletedAt IS NULL AND r.enabled = true")
     List<AutopayRuleEntity> findByEnabledTrue();
 
-    @Query("SELECT r FROM AutopayRuleEntity r WHERE r.deletedAt IS NULL AND r.id = :id")
-    Optional<AutopayRuleEntity> findByIdWithDeleted(@Param("id") Long id);
-
     @Query("SELECT r FROM AutopayRuleEntity r WHERE r.deletedAt IS NULL")
     List<AutopayRuleEntity> findAll();
 
@@ -36,4 +33,7 @@ public interface AutoPayRuleRepository extends JpaRepository<AutopayRuleEntity, 
     @Modifying(clearAutomatically = true)
     @Query("UPDATE AutopayRuleEntity r SET r.deletedAt = NULL, r.updatedAt = CURRENT_TIMESTAMP WHERE r.id = :id")
     void restoreById(@Param("id") Long id);
+
+    @Query("SELECT r FROM AutopayRuleEntity r WHERE r.id = :id")
+    Optional<AutopayRuleEntity> findByIdWithDeleted(@Param("id") Long id);
 }

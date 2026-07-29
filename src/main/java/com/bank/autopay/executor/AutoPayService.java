@@ -45,4 +45,11 @@ public interface AutoPayService {
      * @param id
      */
     void deleteRuleById(Long id);
+
+    /**
+     * Восстановление мягко удалённого правила
+     * @param id ID правила
+     * @return восстановленное правило
+     */
+    AutopayRuleResponse restoreRuleById(Long id);
 }

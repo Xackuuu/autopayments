@@ -90,4 +90,27 @@ public class AutoPayServiceImpl implements AutoPayService {
 
         repository.softDeleteById(id);
     }
+
+    @Override
+    @CacheEvict(value = {"rules", "activeRules"}, allEntries = true)
+    @Transactional
+    public AutopayRuleResponse restoreRuleById(Long id) {
+        log.info("Restoring rule with id: {}", id);
+
+        // Проверяем, что правило существует (даже удалённое)
+        AutopayRuleEntity entity = repository.findByIdWithDeleted(id)
+                .orElseThrow(() -> new RuleNotFoundException(id));
+
+        // Если правило не было удалено — бросаем исключение
+        if (entity.getDeletedAt() == null) {
+            throw new IllegalStateException("Rule with id " + id + " is not deleted");
+        }
+
+        repository.restoreById(id);
+        log.info("Rule restored: id={}", id);
+
+        // Получаем обновлённое правило
+        return mapper.toDto(repository.findById(id)
+                .orElseThrow(() -> new RuleNotFoundException(id)));
+    }
 }

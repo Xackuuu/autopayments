@@ -1,5 +1,6 @@
 package com.bank.autopay.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -11,37 +12,31 @@ import java.math.BigDecimal;
 
 @Setter @Getter
 @NoArgsConstructor
+@Schema(description = "Запрос на создание/обновление правила автоплатежа")
 public class AutopayRuleRequest {
 
-    /**
-     * Id Клиента в банке
-     */
+    @Schema(description = "ID клиента в банке", example = "1", required = true)
     @NotNull(message = "userId обязателен")
     private Long userId;
-    /**
-     * Id получателя
-     */
+
+    @Schema(description = "ID получателя", example = "2", required = true)
     @NotNull(message = "recipientId обязателен")
     private Long recipientId;
-    /**
-     * Сумма списания
-     */
+
+    @Schema(description = "Сумма списания", example = "100.00", required = true, minimum = "0.01")
     @NotNull(message = "amount обязателен")
     @DecimalMin(value = "0.01", message = "Сумма должна быть больше 0")
     private BigDecimal amount;
 
-    @Pattern(regexp = "^(\\*|([0-9]|[1-5][0-9]))\\s+\\*\\s+\\*\\s+\\*\\s+\\*\\s+\\?$", message = "Некорректный cron expression")
+    @Schema(description = "Cron выражение для расписания",
+            example = "0 0 12 * * ?",
+            pattern = "^(\\*|([0-9]|[1-5][0-9]))\\s+\\*\\s+\\*\\s+\\*\\s+\\*\\s+\\?$")
+    @Pattern(regexp = "^(\\*|([0-9]|[1-5][0-9]))\\s+\\*\\s+\\*\\s+\\*\\s+\\*\\s+\\?$",
+            message = "Некорректный cron expression")
     private String cronExpression;
-    /**
-     * Активно ли правило
-     */
+
+    @Schema(description = "Активно ли правило", example = "true", defaultValue = "true")
     private boolean enabled;
 
-    public AutopayRuleRequest(Long userId, Long recipientId, BigDecimal amount, String cronExpression) {
-        this.userId = userId;
-        this.recipientId = recipientId;
-        this.amount = amount;
-        this.cronExpression = cronExpression;
-        this.enabled = true;
-    }
+    // ... конструкторы
 }
