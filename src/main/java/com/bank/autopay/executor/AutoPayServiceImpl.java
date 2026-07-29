@@ -41,14 +41,27 @@ public class AutoPayServiceImpl implements AutoPayService {
     @Cacheable(value = "rules", key = "#id")
     @Transactional(readOnly = true)
     public AutopayRuleResponse getRuleById(Long id) {
-        return mapper.toDto(repository.findById(id).orElseThrow(() -> new RuleNotFoundException(id)));
+        log.info("Fetching rule by id: {}", id);
+        AutopayRuleEntity entity = repository.findById(id)
+                .orElseThrow(() -> {
+                    log.warn("Rule not found: id={}", id);
+                    return new RuleNotFoundException(id);
+                });
+        log.debug("Rule found: {}", entity);
+        return mapper.toDto(entity);
     }
 
     @Override
     @CacheEvict(value = {"rules", "activeRules"}, allEntries = true)
     @Transactional
     public AutopayRuleResponse createRule(AutopayRuleRequest request) {
-        return mapper.toDto(repository.save(mapper.toEntity(request)));
+        log.info("Creating new rule for userId: {}, amount: {}",
+                request.getUserId(), request.getAmount());
+
+        AutopayRuleEntity saved = repository.save(mapper.toEntity(request));
+        log.info("Rule created with id: {}", saved.getId());
+
+        return mapper.toDto(saved);
     }
 
     @Override

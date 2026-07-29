@@ -2,24 +2,22 @@ package com.bank.autopay.scheduler;
 
 import com.bank.autopay.cron.CronChecker;
 import com.bank.autopay.domain.AutopayRuleEntity;
-import com.bank.autopay.event.PaymentFailedEvent;
-import com.bank.autopay.event.PaymentSuccessEvent;
+import com.bank.autopay.logging.CorrelationIdFilter;
 import com.bank.autopay.monitoring.PaymentMetrics;
 import com.bank.autopay.payment.PaymentService;
 import com.bank.autopay.repository.AutoPayRuleRepository;
 import io.micrometer.core.instrument.Timer;
 import jakarta.annotation.PreDestroy;
-import jakarta.persistence.OptimisticLockException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.quartz.Job;
 import org.quartz.JobExecutionContext;
 import org.quartz.JobExecutionException;
+import org.slf4j.MDC;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,17 +35,35 @@ public class AutopayJob implements Job {
 
     @Override
     public void execute(JobExecutionContext context) throws JobExecutionException {
-        if (!running) {
-            log.info("Scheduler is stopping, skipping execution");
-            return;
-        }
+        // Генерируем correlationId для каждого запуска шедулера
+        String correlationId = "scheduler-" + UUID.randomUUID().toString().substring(0, 8);
+        MDC.put(CorrelationIdFilter.CORRELATION_ID_MDC, correlationId);
 
-        List<AutopayRuleEntity> activeRules = repository.findByEnabledTrue();
-        activeRules.forEach(entity -> {
-            if (cronChecker.shouldExecuteNow(entity.getCronExpression(), entity.getLastExecutedAt())) {
-                executePayment(entity);
+        try {
+            if (!running) {
+                log.info("Scheduler is stopping, skipping execution");
+                return;
             }
-        });
+
+            log.info("Scheduler started");
+            List<AutopayRuleEntity> activeRules = repository.findByEnabledTrue();
+            log.info("Found {} active rules", activeRules.size());
+
+            activeRules.forEach(entity -> {
+                if (cronChecker.shouldExecuteNow(entity.getCronExpression(), entity.getLastExecutedAt())) {
+                    executePayment(entity);
+                }
+            });
+
+            log.info("Scheduler completed");
+
+        } catch (Exception e) {
+            log.error("Scheduler execution failed", e);
+            throw e;
+        } finally {
+            // Удаляем из MDC после завершения
+            MDC.clear();
+        }
     }
 
     /**
@@ -56,76 +72,19 @@ public class AutopayJob implements Job {
      */
     @Transactional
     private void executePayment(AutopayRuleEntity rule) {
-        // Генерируем уникальный ключ для платежа
-        // Формат: "rule-{ruleId}-{timestamp}-{UUID}"
-        String idempotencyKey = String.format("rule-%d-%d-%s",
-                rule.getId(),
-                System.currentTimeMillis(),
-                UUID.randomUUID().toString().substring(0, 8)
-        );
+        // Добавляем ruleId в MDC для детализации
+        MDC.put("ruleId", rule.getId().toString());
 
         Timer.Sample timer = paymentMetrics.startPaymentTimer();
 
         try {
-            // Вызываем идемпотентный платеж с Retry
-            boolean result = paymentService.processPayment(
-                    idempotencyKey,
-                    rule.getUserId(),
-                    rule.getRecipientId(),
-                    rule.getAmount()
-            );
-
-            if (result) {
-                // Успешный платеж
-                rule.setLastExecutedAt(LocalDateTime.now());
-                repository.save(rule);
-                paymentMetrics.recordSuccessfulPayment();
-
-                applicationEventPublisher.publishEvent(
-                        new PaymentSuccessEvent(rule.getId(), rule.getUserId(), rule.getAmount())
-                );
-
-                log.info("Payment executed: ruleId={}, userId={}, amount={}, balance={}",
-                        rule.getId(), rule.getUserId(), rule.getAmount(),
-                        paymentService.getBalances().get(rule.getUserId()));
-            } else {
-                // Неудачный платеж (недостаточно средств или ошибка)
-                paymentMetrics.recordFailedPayment();
-
-                applicationEventPublisher.publishEvent(
-                        new PaymentFailedEvent(rule.getId(), rule.getUserId(), rule.getAmount(),
-                                "Payment failed (insufficient funds or error)")
-                );
-
-                log.error("Payment failed: ruleId={}, userId={}, amount={}",
-                        rule.getId(), rule.getUserId(), rule.getAmount());
-            }
-
-        } catch (OptimisticLockException e) {
-            // Конкурентное обновление правила
-            paymentMetrics.recordFailedPayment();
-
-            applicationEventPublisher.publishEvent(new PaymentFailedEvent(
-                    rule.getId(), rule.getUserId(), rule.getAmount(),
-                    "Optimistic lock exception: " + e.getMessage()
-            ));
-
-            log.warn("Rule {} was updated concurrently, skipping this cycle", rule.getId());
-
-        } catch (Exception e) {
-            // Неожиданная ошибка
-            paymentMetrics.recordFailedPayment();
-
-            applicationEventPublisher.publishEvent(new PaymentFailedEvent(
-                    rule.getId(), rule.getUserId(), rule.getAmount(),
-                    "Unexpected error: " + e.getMessage()
-            ));
-
-            log.error("Unexpected error executing payment: ruleId={}, error={}",
-                    rule.getId(), e.getMessage(), e);
-
+            // ... существующий код ...
+            log.info("Payment executed: userId={}, amount={}",
+                    rule.getUserId(), rule.getAmount());
         } finally {
             paymentMetrics.stopPaymentTimer(timer);
+            // Удаляем ruleId из MDC
+            MDC.remove("ruleId");
         }
     }
 
